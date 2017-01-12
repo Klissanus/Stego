@@ -1,11 +1,10 @@
 package stegoalgorithms;
 
-import colorspace.Rgb;
+import colorspace.*;
 import com.sun.istack.internal.NotNull;
 import transforms.Dct;
 import utils.MatrixPixels;
 
-import java.awt.*;
 import java.util.BitSet;
 import java.util.Set;
 
@@ -20,9 +19,9 @@ public class KochZhao
   private int firstCoeffY;
   private int secondCoeffX;
   private int secondCoeffY;
-  private Set<Color> usedColors;
+  private Set<Component> usedColors;
 
-  public KochZhao(double diffValue, int firstCoeffX, int firstCoeffY, int secondCoeffX, int secondCoeffY, Set<Color> usedColors) {
+  public KochZhao(double diffValue, int firstCoeffX, int firstCoeffY, int secondCoeffX, int secondCoeffY, Set<Component> usedColors) {
     this.diffValue = diffValue;
     this.firstCoeffX = firstCoeffX;
     this.firstCoeffY = firstCoeffY;
@@ -35,7 +34,7 @@ public class KochZhao
   @Override
   public void hide(MatrixPixels where, @NotNull byte[] msg, @NotNull byte[] key) {
     int bitCount = msg.length * 8;
-    System.out.println("Message bits capacity = " + bitCount);
+    //System.out.println("Message bits capacity = " + bitCount);
 
     BitSet msgBits = BitSet.valueOf(msg);
     int msgBitIndex = 0;
@@ -45,19 +44,19 @@ public class KochZhao
 
     for (int i = 0; i < where.getPrimaryMatrixs().size(); i++) {
       for (int j = 0; j < where.getPrimaryMatrixs().get(i).size(); j++) {
-        for (Color color : usedColors) {
+        for (Component component : usedColors) {
 
           keyBitIndex = (keyBitIndex == keySize) ? 0 : keyBitIndex;
           if (!keyBits.get(keyBitIndex++)) {
             continue;
           }
 
-          Dct dct = new Dct(where.getPrimaryMatrixs().get(i).get(j), color);
+          Dct dct = new Dct(where.getPrimaryMatrixs().get(i).get(j), component);
 
           insertBitByChangeOneCoeff(dct, msgBits.get(msgBitIndex++));
 
           byte[][] bytes = dct.idct();
-          replaceBytes(where.getPrimaryMatrixs().get(i).get(j), bytes, color);
+          replaceBytes(where.getPrimaryMatrixs().get(i).get(j), bytes, component);
 
           if (msgBitIndex == bitCount) {
             msgBitIndex=0;
@@ -80,12 +79,12 @@ public class KochZhao
 
     for (int i = 0; i < from.getPrimaryMatrixs().size(); i++) {
       for (int j = 0; j < from.getPrimaryMatrixs().get(i).size(); j++) {
-        for (Color color : usedColors) {
+        for (Component component : usedColors) {
           keyBitIndex = (keyBitIndex == keySize) ? 0 : keyBitIndex;
           if (!keyBits.get(keyBitIndex++)) {
             continue;
           }
-          Dct dct = new Dct(from.getPrimaryMatrixs().get(i).get(j), color);
+          Dct dct = new Dct(from.getPrimaryMatrixs().get(i).get(j), component);
           bits.set(bitIndex++, extractBit(dct));
         }
       }
@@ -156,28 +155,28 @@ public class KochZhao
   }
 
 
-  private void replaceBytes(Rgb[][] source, byte[][] bytes, Color color) {
+  private void replaceBytes(ColorSpace[][] source, byte[][] bytes, Component color) {
     int i = 0;
     for (int m = 0; m < source.length; m++) {
       for (int n = 0; n < source[0].length; n++) {
-                /*if((source[m][n].getColor(color) != bytes[m][n])){
+                /*if((source[m][n].getComponent(color) != bytes[m][n])){
                     System.out.println("\n PIXEL NUM = " + i++);
-                    System.out.println("source byte = " + source[m][n].getColor(color));
+                    System.out.println("source byte = " + source[m][n].getComponent(color));
                     System.out.println("replace byte = " + bytes[m][n]);
                 }*/
-        /*if (source[m][n].getColor(color) >= 0
+        /*if (source[m][n].getComponent(color) >= 0
             && bytes[m][n] < 0
-            || source[m][n].getColor(color) < 0
+            || source[m][n].getComponent(color) < 0
             && bytes[m][n] > 0) {
-          System.out.println("source byte = " + source[m][n].getColor(color));
+          System.out.println("source byte = " + source[m][n].getComponent(color));
           System.out.println("replace byte = " + bytes[m][n]);
-          //source[m][n].setColor(color,(byte) source[m][n].getColor(color)); //(Math.abs(bytes[m][n]))); // -128
-          //System.out.println("replaced byte = " + source[m][n].getColor(color));
+          //source[m][n].setComponent(color,(byte) source[m][n].getComponent(color)); //(Math.abs(bytes[m][n]))); // -128
+          //System.out.println("replaced byte = " + source[m][n].getComponent(color));
           //byte[] b = new byte[1];
-          //b[0] = source[m][n].getColor(color);
+          //b[0] = source[m][n].getComponent(color);
           //System.out.println("" + BitSet.valueOf(b));
         }*/
-        source[m][n].setColor(color, bytes[m][n]);
+        source[m][n].setComponent(color, bytes[m][n]);
 
       }
     }

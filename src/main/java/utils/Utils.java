@@ -1,5 +1,6 @@
 package utils;
 
+import colorspace.Component;
 import colorspace.RgbPixels;
 
 import javax.imageio.IIOImage;
@@ -78,9 +79,9 @@ public class Utils {
   private static byte[] rgbToBgr(RgbPixels pixels) {
     byte[] result = new byte[pixels.getPixels().length * 3];
     for (int i = 0; i < pixels.getPixels().length; ++i) {
-      result[3 * i + 0] = (byte) (0xFF & pixels.getPixels()[i].getColor(Color.BLUE));
-      result[3 * i + 1] = (byte) (0xFF & pixels.getPixels()[i].getColor(Color.GREEN));
-      result[3 * i + 2] = (byte) (0xFF & pixels.getPixels()[i].getColor(Color.RED));
+      result[3 * i + 0] = (byte) (0xFF & (int) pixels.getPixels()[i].getComponent(Component.BLUE));
+      result[3 * i + 1] = (byte) (0xFF & (int) pixels.getPixels()[i].getComponent(Component.GREEN));
+      result[3 * i + 2] = (byte) (0xFF & (int) pixels.getPixels()[i].getComponent(Component.RED));
     }
     return result;
   }

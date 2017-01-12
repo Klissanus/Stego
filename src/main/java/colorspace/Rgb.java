@@ -5,7 +5,8 @@ import java.awt.*;
 /**
  * Created by Klissan on 02.12.2016.
  */
-public class Rgb {
+public class Rgb
+    implements ColorSpace{
   private byte r;
   private byte g;
   private byte b;
@@ -16,31 +17,34 @@ public class Rgb {
     this.b = b;
   }
 
-
-  public byte getColor(Color color) {
-    if (color == Color.RED) {
-      return r;
-    }
-    if (color == Color.GREEN) {
-      return g;
-    }
-    if (color == Color.BLUE) {
-      return b;
-    }
-
-    return r;
-  }
-
-  public void setColor(Color color, byte byt) {
-    if (color == Color.RED) {
-      this.r = byt;
-    }
-    if (color == Color.GREEN) {
-      this.g = byt;
-    }
-    if (color == Color.BLUE) {
-      this.b = byt;
+  @Override
+  public double getComponent(Component component) {
+    switch(component){
+      case RED:
+        return r;
+      case GREEN:
+        return g;
+      case BLUE:
+        return b;
+      default:
+        throw new IllegalArgumentException();
     }
   }
+
+  @Override
+  public void setComponent(Component component, double value) {
+    byte byt = (byte) value;
+    switch(component){
+      case RED:
+        this.r = byt;
+      case GREEN:
+        this.g = byt;
+      case BLUE:
+        this.b = byt;
+      default:
+        throw new IllegalArgumentException();
+    }
+  }
+
 }
 

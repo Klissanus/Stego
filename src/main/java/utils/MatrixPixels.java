@@ -1,24 +1,39 @@
 package utils;
 
+import colorspace.ColorSpace;
 import colorspace.Rgb;
+import com.sun.istack.internal.NotNull;
+import transforms.Dct;
 
-import java.util.ArrayList;
+import java.awt.*;
+import java.util.*;
 
 /**
  * Created by Klissan on 02.12.2016.
  */
 public class MatrixPixels {
-  int blockSize = 8;
-  int width;
-  int height;
-  int sizeX;
-  int sizeY;
-  ArrayList<ArrayList<Rgb[][]>> matrixs = new ArrayList<ArrayList<Rgb[][]>>();
-  ArrayList<Rgb[][]> rightOffset = new ArrayList<Rgb[][]>();
-  ArrayList<Rgb[][]> downOffset = new ArrayList<Rgb[][]>();
-  Rgb[][] rightDownCorner;
+  private int blockSize = 8;
+  private int width;
+  private int height;
+  private int sizeX;
+  private int sizeY;
+  private ArrayList<ArrayList<ColorSpace[][]>> matrixs = new ArrayList<>();
+  private ArrayList<ColorSpace[][]> rightOffset = new ArrayList<>();
+  private ArrayList<ColorSpace[][]> downOffset = new ArrayList<>();
+  private ColorSpace[][] rightDownCorner;
 
-  public ArrayList<ArrayList<Rgb[][]>> getPrimaryMatrixs() {
+  public MatrixPixels(MatrixPixels mp) {
+    this.width = mp.width;
+    this.height = mp.height;
+    this.sizeX = mp.sizeX;
+    this.sizeY = mp.sizeY;
+    this.matrixs = new ArrayList<>(mp.matrixs);
+    this.rightOffset = new ArrayList<>(mp.rightOffset);
+    this.downOffset = new ArrayList<>(mp.downOffset);
+    this.rightDownCorner = mp.rightDownCorner;//todo new
+  }
+
+  public ArrayList<ArrayList<ColorSpace[][]>> getPrimaryMatrixs() {
     return matrixs;
   }
 
@@ -26,18 +41,18 @@ public class MatrixPixels {
     return sizeX * sizeY;
   }
 
-  public MatrixPixels(Rgb[] pixels, int width, int height) {
+  public MatrixPixels(ColorSpace[] pixels, int width, int height) {
     this.width = width;
     this.height = height;
     sizeX = width / blockSize;
     sizeY = height / blockSize;
     int offsetX = width % blockSize;
     int offsetY = height % blockSize;
-    //заполняем блоки blockSizeхblockSize
+    //заполняем блоки blockSize х blockSize
     for (int j = 0; j < sizeY; j++) {
-      matrixs.add(new ArrayList<Rgb[][]>());
+      matrixs.add(new ArrayList<ColorSpace[][]>());
       for (int i = 0; i < sizeX; i++) {
-        Rgb[][] matrix = new Rgb[blockSize][blockSize];
+        ColorSpace[][] matrix = new ColorSpace[blockSize][blockSize];
         for (int n = 0; n < blockSize; n++) {
           for (int m = 0; m < blockSize; m++) {
             matrix[n][m] = pixels[(blockSize * j + n) * width + blockSize * i + m];
@@ -48,7 +63,7 @@ public class MatrixPixels {
     }
     //заполняем оставшиеся блоки справа blockSize х offX
     for (int t = 0; t < sizeY; t++) {
-      Rgb[][] matrix = new Rgb[blockSize][offsetX];
+      ColorSpace[][] matrix = new ColorSpace[blockSize][offsetX];
       for (int j = 0; j < blockSize; j++) {
         for (int i = 0; i < offsetX; i++) {
           matrix[j][i] = pixels[t * blockSize * width + j * width + blockSize * sizeX + i];
@@ -60,7 +75,7 @@ public class MatrixPixels {
     //заполняем нижние блоки offy x blockSize
     int offset = blockSize * sizeY * width;
     for (int t = 0; t < sizeX; t++) {
-      Rgb[][] matrix = new Rgb[offsetY][blockSize];
+      ColorSpace[][] matrix = new ColorSpace[offsetY][blockSize];
       for (int j = 0; j < offsetY; j++) {
         for (int i = 0; i < blockSize; i++) {
           matrix[j][i] = pixels[offset + j * width + blockSize * t + i];
@@ -70,7 +85,7 @@ public class MatrixPixels {
     }
 
     //заполняем угол
-    rightDownCorner = new Rgb[offsetY][offsetX];
+    rightDownCorner = new ColorSpace[offsetY][offsetX];
     for (int j = 0; j < offsetY; j++) {
       for (int i = 0; i < offsetX; i++) {
         rightDownCorner[j][i] = pixels[sizeY * blockSize * width + j * width + sizeX * blockSize + i];
@@ -78,8 +93,8 @@ public class MatrixPixels {
     }
   }
 
-  public Rgb[] toArray() {
-    Rgb[] result = new Rgb[width * height];
+  public ColorSpace[] toArray() {
+    ColorSpace[] result = new Rgb[width * height];
     for (int j = 0; j < sizeY; j++) {
       for (int i = 0; i < sizeX; i++) {
         for (int n = 0; n < blockSize; n++) {
@@ -119,3 +134,77 @@ public class MatrixPixels {
     return result;
   }
 }
+/*
+
+  public HashMap<Color, MatrixPixels> changeBlocksColor(Rgb empty, Rgb correct, Rgb broken,
+                                Set<Color> usedColors, @NotNull byte[] key, ArrayList<Integer> errpos) {
+
+    HashMap<Color, MatrixPixels> map = new HashMap<>();
+    map.put(Color.RED, new MatrixPixels(this));
+    map.put(Color.GREEN, new MatrixPixels(this));
+    map.put(Color.BLUE, new MatrixPixels(this));
+    map.forEach( (k,v) -> v.recolorEdgeBlocks());
+
+    Map<Color, Set<Color>> colorToChange = new HashMap<>();
+    HashSet<Color> gb = new HashSet<>(); gb.add(Color.RED); gb.add(Color.GREEN); gb.add(Color.BLUE);
+    HashSet<Color> rb = new HashSet<>(); rb.add(Color.RED); rb.add(Color.GREEN); rb.add(Color.BLUE);
+    HashSet<Color> rg = new HashSet<>(); rg.add(Color.RED); rg.add(Color.GREEN); rg.add(Color.BLUE);
+    colorToChange.put(Color.RED, gb);
+    colorToChange.put(Color.GREEN, rb);
+    colorToChange.put(Color.BLUE, rg);
+
+    Set<Color> colorsSet = new HashSet<>();
+    colorsSet.add(Color.RED);
+    colorsSet.add(Color.GREEN);
+    colorsSet.add(Color.BLUE);
+
+    BitSet keyBits = BitSet.valueOf(key);
+    int keySize = key.length * 8;
+    int keyBitIndex = 0;
+
+    int num = -1;
+    int k=0;
+    for (int i = 0; i < this.getPrimaryMatrixs().size(); i++) {
+      for (int j = 0; j < this.getPrimaryMatrixs().get(i).size(); j++) {
+        for (Color color : usedColors) {
+          keyBitIndex = (keyBitIndex == keySize) ? 0 : keyBitIndex;
+          if (!keyBits.get(keyBitIndex++)) {
+            map.get(color).recolorBlock(map.get(color).getPrimaryMatrixs().get(i).get(j), empty, colorsSet);
+            continue;
+          }
+          num++;
+          if(errpos.size() != 0 && k < errpos.size() &&  num == errpos.get(k)){
+            map.get(color).recolorBlock(map.get(color).getPrimaryMatrixs().get(i).get(j), broken, colorsSet);
+            //map.get(color).recolorBlock(map.get(color).getPrimaryMatrixs().get(i).get(j), broken, colorToChange.get(color));
+            k++;
+          }else{
+            map.get(color).recolorBlock(map.get(color).getPrimaryMatrixs().get(i).get(j), correct, colorsSet);
+          }
+        }
+      }
+    }
+    System.out.println("max num = " + num);
+    return map;
+  }
+
+  private void recolorEdgeBlocks(){
+    Rgb color = new Rgb((byte) 0x00, (byte)0x00,(byte)0x00);
+    Set<Color> colorsSet = new HashSet<>();
+    colorsSet.add(Color.RED);
+    colorsSet.add(Color.GREEN);
+    colorsSet.add(Color.BLUE);
+
+    this.downOffset.forEach(c -> recolorBlock(c, color, colorsSet));
+    this.rightOffset.forEach(c -> recolorBlock(c, color, colorsSet));
+    recolorBlock(this.rightDownCorner, color, colorsSet);
+  }
+
+  private void recolorBlock(Rgb[][] block, Rgb color, Set<Color> colors){
+    for (Rgb[] aC : block) {
+      for (Rgb anAC : aC) {
+        colors.forEach(c -> anAC.setComponent(c, color.getComponent(c)));
+      }
+    }
+  }
+}
+*/

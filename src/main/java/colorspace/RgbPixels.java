@@ -27,9 +27,9 @@ public class RgbPixels {
     pixels = new Rgb[rgbPixels.length];
     for (int i = 0; i < rgbPixels.length; ++i) {
       pixels[i] = new Rgb(
-          rgbPixels[i].getColor(Color.RED),
-          rgbPixels[i].getColor(Color.GREEN),
-          rgbPixels[i].getColor(Color.BLUE));
+          (byte) rgbPixels[i].getComponent(Component.RED),
+          (byte) rgbPixels[i].getComponent(Component.GREEN),
+          (byte) rgbPixels[i].getComponent(Component.BLUE));
     }
   }
 /*
