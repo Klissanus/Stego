@@ -6,6 +6,7 @@ import com.sun.istack.internal.NotNull;
 import transforms.Dct;
 
 import java.awt.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -17,6 +18,7 @@ public class MatrixPixels {
   private int height;
   private int sizeX;
   private int sizeY;
+  private Class type;
   private ArrayList<ArrayList<ColorSpace[][]>> matrixs = new ArrayList<>();
   private ArrayList<ColorSpace[][]> rightOffset = new ArrayList<>();
   private ArrayList<ColorSpace[][]> downOffset = new ArrayList<>();
@@ -27,10 +29,16 @@ public class MatrixPixels {
     this.height = mp.height;
     this.sizeX = mp.sizeX;
     this.sizeY = mp.sizeY;
+    this.type = mp.type;
     this.matrixs = new ArrayList<>(mp.matrixs);
     this.rightOffset = new ArrayList<>(mp.rightOffset);
     this.downOffset = new ArrayList<>(mp.downOffset);
     this.rightDownCorner = mp.rightDownCorner;//todo new
+//    for (int i = 0; i < mp.rightDownCorner.length; i++) {
+//      for (int j = 0; j < mp.rightDownCorner[0].length; j++) {
+//        this.rightDownCorner[i][j] = mp.rightDownCorner[i][j].;
+//      }
+//    }
   }
 
   public ArrayList<ArrayList<ColorSpace[][]>> getPrimaryMatrixs() {
@@ -42,6 +50,7 @@ public class MatrixPixels {
   }
 
   public MatrixPixels(ColorSpace[] pixels, int width, int height) {
+    this.type = pixels[0].getClass();
     this.width = width;
     this.height = height;
     sizeX = width / blockSize;
@@ -94,7 +103,8 @@ public class MatrixPixels {
   }
 
   public ColorSpace[] toArray() {
-    ColorSpace[] result = new Rgb[width * height];
+    ColorSpace[] result = (ColorSpace[]) Array.newInstance(this.type, width * height);
+    //ColorSpace[] result = new ColorSpace[width * height];
     for (int j = 0; j < sizeY; j++) {
       for (int i = 0; i < sizeX; i++) {
         for (int n = 0; n < blockSize; n++) {

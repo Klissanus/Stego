@@ -1,4 +1,4 @@
-package transforms.bytemapping;
+package colorspace.bytemapping;
 
 /**
  * Created by Klissan on 16.12.2016.

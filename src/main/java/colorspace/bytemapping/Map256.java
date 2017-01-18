@@ -1,4 +1,4 @@
-package transforms.bytemapping;
+package colorspace.bytemapping;
 
 /**
  * Created by Klissan on 16.12.2016.
@@ -15,8 +15,7 @@ public class Map256 implements ByteMapping {
     byte b;
     if (i > 255) {
       b = (byte) 0x80;
-    }
-    if (i < 0) {
+    }else if (i < 0) {
       b = (byte) 0x00;
     } else {
       b = (byte) ((i < 128) ? (i) : (i - 256));

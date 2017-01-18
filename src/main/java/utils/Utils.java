@@ -1,7 +1,8 @@
 package utils;
 
+import colorspace.*;
 import colorspace.Component;
-import colorspace.RgbPixels;
+import colorspace.bytemapping.Map256;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -23,15 +24,116 @@ import java.util.Locale;
  * Created by Klissan on 02.12.2016.
  */
 public class Utils {
+  static Map256 map256 = new Map256();
 
-  public static RgbPixels readPixels(BufferedImage img) {
+  public static JavaByte[] readPixels(BufferedImage img) {
     int w = img.getWidth();
     int h = img.getHeight();
     int l = 3 * w * h;
-    return new RgbPixels(img.getRaster().getPixels(0, 0, w, h, new int[l]));
+    int[] source = img.getRaster().getPixels(0, 0, w, h, new int[l]);
+    JavaByte[] pixels = new JavaByte[source.length / 3];
+    for (int i = 0; i < source.length / 3; ++i) {
+      pixels[i] = new JavaByte(
+          (byte) (0xFF & source[3 * i + 0]),
+          (byte) (0xFF & source[3 * i + 1]),
+          (byte) (0xFF & source[3 * i + 2]));
+    }
+    return pixels;
   }
 
-  public static BufferedImage createNewImage(BufferedImage source, RgbPixels pixels) {
+  public static YCbCr RgbToYCbCr(Rgb pixel){
+    return new YCbCr(pixel);
+  }
+
+
+  public static YCbCr[] RgbToYCbCr(Rgb[] pixels){
+    YCbCr[] result = new YCbCr[pixels.length];
+    for (int i = 0; i < pixels.length; i++) {
+      result[i] = RgbToYCbCr(pixels[i]);
+    }
+    return result;
+  }
+
+  public static YCbCr javaByteToYCbCr(JavaByte pixel){
+    return new YCbCr(javaByteToRgb(pixel));
+  }
+
+  public static YCbCr[] javaByteToYCbCr(JavaByte[] pixels){
+    YCbCr[] result = new YCbCr[pixels.length];
+    for (int i = 0; i < pixels.length; i++) {
+      result[i] = javaByteToYCbCr(pixels[i]);
+    }
+    return result;
+  }
+
+  public static Rgb YCbCrToRgb(YCbCr pixel){
+    double y = pixel.getComponent(Component.Y);
+    double cb = pixel.getComponent(Component.CB);
+    double cr = pixel.getComponent(Component.CR);
+    int r = (int) Math.round(y                         + 1.402000 * (cr - 128));
+    int g = (int) Math.round(y - 0.344136 * (cb - 128) - 0.714136 * (cr - 128));
+    int b = (int) Math.round(y + 1.772000 * (cb - 128)                        );
+    return new Rgb(r, g, b);
+  }
+
+  public static Rgb[] YCbCrToRgb(YCbCr[] pixels) {
+    Rgb[] result = new Rgb[pixels.length];
+    for (int i = 0; i < pixels.length; i++) {
+      result[i] = YCbCrToRgb(pixels[i]);
+    }
+    return result;
+  }
+
+  public static Rgb javaByteToRgb(JavaByte pixel){
+    byte jr = (byte) Math.round(pixel.getComponent(Component.RED));
+    byte jg = (byte) Math.round(pixel.getComponent(Component.GREEN));
+    byte jb = (byte) Math.round(pixel.getComponent(Component.BLUE));
+    int r = map256.forward(jr);
+    int g = map256.forward(jg);
+    int b = map256.forward(jb);
+    return new Rgb(r, g, b);
+  }
+
+  public static Rgb[] javaByteToRgb(JavaByte[] pixels){
+    Rgb[] result = new Rgb[pixels.length];
+    for (int i = 0; i < pixels.length; i++) {
+      result[i] = javaByteToRgb(pixels[i]);
+    }
+    return result;
+  }
+
+  public static JavaByte RgbToJavaByte(Rgb pixel){
+    long r = Math.round(pixel.getComponent(Component.RED));
+    long g = Math.round(pixel.getComponent(Component.GREEN));
+    long b = Math.round(pixel.getComponent(Component.BLUE));
+    byte jr = map256.inverse(r);
+    byte jg = map256.inverse(g);
+    byte jb = map256.inverse(b);
+    return new JavaByte(jr, jg, jb);
+  }
+
+  public static JavaByte[] RgbToJavaByte(Rgb[] pixels){
+    JavaByte[] result = new JavaByte[pixels.length];
+    for (int i = 0; i < pixels.length; i++) {
+      result[i] = RgbToJavaByte(pixels[i]);
+    }
+    return result;
+  }
+
+  public static JavaByte[] convertToJavaByte(ColorSpace[] pixels){
+    Class aClass = pixels[0].getClass();
+    if( pixels[0] instanceof JavaByte ){
+      return (JavaByte[]) pixels;
+    } else if (pixels[0] instanceof Rgb){
+      return RgbToJavaByte((Rgb[]) pixels);
+    } else if( pixels[0] instanceof YCbCr){
+      return RgbToJavaByte(YCbCrToRgb((YCbCr[]) pixels));
+    }else{
+      throw new ClassCastException(pixels.getClass().toString());
+    }
+  }
+
+  public static BufferedImage createNewImage(BufferedImage source, JavaByte[] pixels) {
     BufferedImage img = new BufferedImage(
         source.getWidth(),
         source.getHeight(),
@@ -43,7 +145,7 @@ public class Utils {
     img.setData(
         Raster.createRaster(
             r.getSampleModel(),
-            new DataBufferByte(Utils.rgbToBgr(pixels), pixels.getPixels().length),
+            new DataBufferByte(Utils.rgbToBgr(pixels), pixels.length),
             new Point(0, 0)
         )
     );
@@ -76,13 +178,15 @@ public class Utils {
     }
   }
 
-  private static byte[] rgbToBgr(RgbPixels pixels) {
-    byte[] result = new byte[pixels.getPixels().length * 3];
-    for (int i = 0; i < pixels.getPixels().length; ++i) {
-      result[3 * i + 0] = (byte) (0xFF & (int) pixels.getPixels()[i].getComponent(Component.BLUE));
-      result[3 * i + 1] = (byte) (0xFF & (int) pixels.getPixels()[i].getComponent(Component.GREEN));
-      result[3 * i + 2] = (byte) (0xFF & (int) pixels.getPixels()[i].getComponent(Component.RED));
+  private static byte[] rgbToBgr(JavaByte[] pixels) {
+    byte[] result = new byte[pixels.length * 3];
+    for (int i = 0; i < pixels.length; ++i) {
+      result[3 * i + 0] = (byte) (0xFF & (int) pixels[i].getComponent(Component.BLUE));
+      result[3 * i + 1] = (byte) (0xFF & (int) pixels[i].getComponent(Component.GREEN));
+      result[3 * i + 2] = (byte) (0xFF & (int) pixels[i].getComponent(Component.RED));
     }
     return result;
   }
+
+
 }

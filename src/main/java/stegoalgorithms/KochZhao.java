@@ -55,8 +55,8 @@ public class KochZhao
 
           insertBitByChangeOneCoeff(dct, msgBits.get(msgBitIndex++));
 
-          byte[][] bytes = dct.idct();
-          replaceBytes(where.getPrimaryMatrixs().get(i).get(j), bytes, component);
+          double[][] idct = dct.idct();
+          replaceBytes(where.getPrimaryMatrixs().get(i).get(j), idct, component);
 
           if (msgBitIndex == bitCount) {
             msgBitIndex=0;
@@ -155,14 +155,14 @@ public class KochZhao
   }
 
 
-  private void replaceBytes(ColorSpace[][] source, byte[][] bytes, Component color) {
+  private void replaceBytes(ColorSpace[][] source, double[][] idct, Component color) {
     int i = 0;
     for (int m = 0; m < source.length; m++) {
       for (int n = 0; n < source[0].length; n++) {
-                /*if((source[m][n].getComponent(color) != bytes[m][n])){
+                /*if(Math.round(source[m][n].getComponent(color)) != Math.round(idct[m][n])){
                     System.out.println("\n PIXEL NUM = " + i++);
                     System.out.println("source byte = " + source[m][n].getComponent(color));
-                    System.out.println("replace byte = " + bytes[m][n]);
+                    System.out.println("replace byte = " + idct[m][n]);
                 }*/
         /*if (source[m][n].getComponent(color) >= 0
             && bytes[m][n] < 0
@@ -176,8 +176,7 @@ public class KochZhao
           //b[0] = source[m][n].getComponent(color);
           //System.out.println("" + BitSet.valueOf(b));
         }*/
-        source[m][n].setComponent(color, bytes[m][n]);
-
+        source[m][n].setComponent(color, idct[m][n]);
       }
     }
   }

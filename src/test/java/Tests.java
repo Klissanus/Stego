@@ -1,49 +1,54 @@
-import colorspace.RgbPixels;
+import colorspace.ColorSpace;
+import colorspace.Component;
+import colorspace.JavaByte;
 import org.junit.Test;
 import stegoalgorithms.KochZhao;
 import stegoalgorithms.StegoAlgorithm;
-import transforms.bytemapping.ByteMapping;
-import transforms.bytemapping.Map256;
+import colorspace.bytemapping.ByteMapping;
+import colorspace.bytemapping.Map256;
 import utils.MatrixPixels;
 import utils.Utils;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-/**
+/*
+*
  * Created by Klissan on 16.12.2016.
- */
+
+*/
+
 public class Tests {
 
   BufferedImage img;
   BufferedImage newImg;
   String filePath = "C:\\Users\\Klissan\\IdeaProjects\\Stego\\src\\main\\resources\\";
   String outputPath = "D:\\Stego\\";
-  String fileName = "images/orlans.jpg";
+  String fileName = "images/Lenna.png";
 
   byte[] stegoKey = new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
   String message = "H3ll0 W0r1d, this message wants to make stego great again";
-  Set<Color> colorsSet = new HashSet<>();
+  Set<Component> colorsSet = new HashSet<>();
 
   private MatrixPixels initTest() {
-    colorsSet.add(Color.BLUE);
-    //colorsSet.add(Color.GREEN);
-    //colorsSet.add(Color.RED);
-/*
+    //colorsSet.add(Component.BLUE);
+    //colorsSet.add(Component.GREEN);
+    //colorsSet.add(Component.RED);
+    colorsSet.add(Component.Y);
     stegoKey = new byte[2048];
     for (int i = 0; i < 2048; i++) {
       stegoKey[i] = (byte) (Math.random() * 256 - 128);
-    }*/
+    }
+
     MatrixPixels mtr = null;
     try {
       //open source file
       img = ImageIO.read(new File(filePath + fileName));
-      RgbPixels pixels = Utils.readPixels(img);
-      mtr = new MatrixPixels(pixels.getPixels(), img.getWidth(), img.getHeight());
+      JavaByte[] pixels = Utils.readPixels(img);
+      mtr = new MatrixPixels(Utils.javaByteToYCbCr(pixels), img.getWidth(), img.getHeight());
 
 
     } catch (IOException e) {
@@ -51,6 +56,7 @@ public class Tests {
     }
     return mtr;
   }
+/*
 
   void testAll(MatrixPixels sourceMtr) throws IOException {
     for (int i = 0; i < 8; i++) {
@@ -78,7 +84,7 @@ public class Tests {
 
             stegoAlg.hide(mp, message.getBytes(), stegoKey);
 
-            RgbPixels f = new RgbPixels(mp.toArray());
+            JavaByte[] f = mp.toArray();
             newImg = Utils.createNewImage(img, f);
             String filename = "Index_" + i + j +"\\P_" + coeffP + "\\comp_" + comp + ".";
             String format = "jpg";
@@ -86,7 +92,7 @@ public class Tests {
             Utils.compressImage(outputfile, newImg, comp);
 
             newImg = ImageIO.read(new File(outputPath + filename + format));
-            MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg).getPixels(), newImg.getWidth(), newImg.getHeight());
+            MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
 
             compareImages(img, newImg);
             ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.readMessage(nmp, stegoKey));
@@ -97,8 +103,10 @@ public class Tests {
     }
   }
 
+*/
 
- /* void testStegoIndexQuality(MatrixPixels sourceMtr) throws IOException{
+/*
+ void testStegoIndexQuality(MatrixPixels sourceMtr) throws IOException{
     System.out.println("message byte size = " + message.getBytes().length);
     int start = 40;
     double step = 10;
@@ -108,9 +116,12 @@ public class Tests {
         int index1 = i;
         int index2 = j;
       }
-  }*/
+  }
+*/
 
 
+
+/*
 
  @Test
   public void testStegoCompressionQuality() throws IOException{
@@ -139,12 +150,11 @@ public class Tests {
 
 
       newImg = ImageIO.read(new File(filePath + filename + format));
-      MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg).getPixels(), newImg.getWidth(), newImg.getHeight());
+      MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
 
       compareImages(img, newImg);
       System.out.println("blocks = " + nmp.getPrimaryMatrixCount());
       ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.readMessage(nmp, stegoKey));
-/*
 
       Rgb empty = new Rgb((byte) 0, (byte) 0, (byte) 0);
       Rgb correct = new Rgb((byte) -128, (byte) -128, (byte) -128);
@@ -162,10 +172,12 @@ public class Tests {
         }catch (IOException e){
           System.err.println(e);
         }
-      });*/
+      });
+
 
     }
   }
+*/
 
   @Test
   public void testStegoCoeffQuality() throws IOException{
@@ -184,10 +196,10 @@ public class Tests {
 
       stegoAlg.hide(mp, message.getBytes(), stegoKey);
 
-      RgbPixels f = new RgbPixels(mp.toArray());
+      JavaByte[] f = Utils.convertToJavaByte(mp.toArray());
       newImg = Utils.createNewImage(img, f);
       String filename = "CoeffQuality\\coeff_" + coeff + ".";
-      String format = "jpg";
+      String format = "bmp";
       File outputfile = new File(filePath + filename + format);
       if( format.equals("bmp")){
         ImageIO.write(newImg, format, outputfile);
@@ -197,12 +209,12 @@ public class Tests {
       }
 
       newImg = ImageIO.read(new File(filePath + filename + format));
-      MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg).getPixels(), newImg.getWidth(), newImg.getHeight());
+      MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
 
       compareImages(img, newImg);
+/*
       System.out.println("blocks = " + nmp.getPrimaryMatrixCount());
       ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.readMessage(nmp, stegoKey));
-/*
 
       Rgb empty = new Rgb((byte) 0, (byte) 0, (byte) 0);
       Rgb correct = new Rgb((byte) -128, (byte) -128, (byte) -128);
@@ -221,7 +233,9 @@ public class Tests {
           System.err.println(e);
         }
       });
+
 */
+
 
     }
   }
@@ -238,16 +252,21 @@ public class Tests {
     long sumDiff = 0;
 
     int maxDiff = 0;
+    int count = 0;
     for(int i = 0; i < size; ++i){
       int sourceb = bmap.forward((byte) sourceBytes[i]);
       int stegob = bmap.forward((byte) stegoBytes[i]);
       int diff = Math.abs(sourceb - stegob);
+      count = (diff > 0) ? count + 1 : count;
       sumDiff += diff;
       maxDiff =  diff > maxDiff ? diff : maxDiff;
     }
     double avgDiff = (double) sumDiff / size;
     System.out.println("Max abs diff = " + maxDiff);
     System.out.println("Average abs diff = " + avgDiff);
+    System.out.println("Size = " + size);
+    System.out.println("Pixel miscount = " + count);
+    System.out.println("Percent pixel = " + (double) count/size * 100);
   }
 
   ArrayList<Integer> compareMessages(byte[] original, byte[] read){

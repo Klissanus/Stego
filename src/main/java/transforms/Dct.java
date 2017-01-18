@@ -2,16 +2,14 @@ package transforms;
 
 import colorspace.ColorSpace;
 import colorspace.Component;
-import colorspace.Rgb;
-import transforms.bytemapping.ByteMapping;
-import transforms.bytemapping.Map256;
+import colorspace.bytemapping.ByteMapping;
+import colorspace.bytemapping.Map256;
 
 /**
  * Created by Klissan on 02.12.2016.
  */
 public class Dct {
   private double[][] dctMatrix;
-  private ByteMapping bm = new Map256();
 
   static {
     e = new double[8][8];
@@ -27,8 +25,7 @@ public class Dct {
         double coeff = 0.0;
         for (int x = 0; x < matrix.length; x++) {
           for (int y = 0; y < matrix.length; y++) {
-            byte colorByte = (byte) matrix[x][y].getComponent(colorType);
-            int value = bm.forward(colorByte);
+            double value = matrix[x][y].getComponent(colorType);
             coeff += cos_t[u][x] * cos_t[v][y] * value;
           }
         }
@@ -42,10 +39,9 @@ public class Dct {
   }
 
 
-  public byte[][] idct() {
+  public double[][] idct() {
     double min = Double.MAX_VALUE;
     double max = Double.MIN_VALUE;
-    byte[][] result = new byte[dctMatrix.length][dctMatrix.length];
     double[][] idctCoeffs = new double[dctMatrix.length][dctMatrix.length];
     for (int x = 0; x < dctMatrix.length; x++) {
       for (int y = 0; y < dctMatrix.length; y++) {
@@ -55,16 +51,16 @@ public class Dct {
             coeff += e[u][v] * dctMatrix[u][v] * cos_t[u][x] * cos_t[v][y];
           }
         }
+        idctCoeffs[x][y] = coeff;/*
         min = (coeff < min) ? (coeff) : (min);
         max = (coeff > max) ? (coeff) : (max);
-        idctCoeffs[x][y] = coeff;
-        result[x][y] = bm.inverse(Math.round(coeff));
+        result[x][y] = bm.inverse(Math.round(coeff));*/
       }
     }
-    return result;
+    return idctCoeffs;
     //return normalisation(idctCoeffs, min, max);
   }
-
+/*
   private byte[][] normalisation(double[][] idctCoeffs, double min, double max) {
     byte[][] result = new byte[dctMatrix.length][dctMatrix.length];
     for (int i = 0; i < idctCoeffs.length; i++) {
@@ -78,7 +74,7 @@ public class Dct {
       }
     }
     return result;
-  }
+  }*/
 
   void print() {
     System.out.println("DCT: ");

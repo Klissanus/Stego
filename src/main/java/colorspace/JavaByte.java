@@ -1,15 +1,16 @@
 package colorspace;
 
 /**
- * Created by Klissan on 02.12.2016.
+ * Created by Klissan on 12.01.2017.
  */
-public class Rgb
-    implements ColorSpace{
-  private int r;
-  private int g;
-  private int b;
+public class JavaByte
+    implements ColorSpace
+{
+  private byte r;
+  private byte g;
+  private byte b;
 
-  public Rgb(int r, int g, int b) {
+  public JavaByte(byte r, byte g, byte b) {
     this.r = r;
     this.g = g;
     this.b = b;
@@ -32,7 +33,7 @@ public class Rgb
   @Override
   public void setComponent(Component component, double value) {
     long v = Math.round(value);
-    int byt = (int) ((v > 255) ? 0xFF : (v < 0) ? 0x00 : v);
+    byte byt = (byte) ((v > 127) ? 0x7F : ((v < -128) ? 0x80 : v));
     switch(component){
       case RED:
         this.r = byt;
@@ -49,4 +50,3 @@ public class Rgb
   }
 
 }
-
