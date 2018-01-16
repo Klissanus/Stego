@@ -3,7 +3,7 @@ package stegoalgorithms;
 import colorspace.*;
 import com.sun.istack.internal.NotNull;
 import transforms.Dct;
-import utils.MatrixPixels;
+import utils.PixelsMatrix;
 
 import java.util.BitSet;
 import java.util.Set;
@@ -12,8 +12,7 @@ import java.util.Set;
  * Created by Klissan on 08.12.2016.
  */
 
-public class KochZhao
-    implements StegoAlgorithm {
+public class KochZhao{
   private double diffValue;
   private int firstCoeffX;
   private int firstCoeffY;
@@ -31,8 +30,7 @@ public class KochZhao
   }
 
 
-  @Override
-  public void hide(MatrixPixels where, @NotNull byte[] msg, @NotNull byte[] key) {
+  public void hide(PixelsMatrix where, @NotNull byte[] msg, @NotNull byte[] key) {
     int bitCount = msg.length * 8;
     //System.out.println("Message bits capacity = " + bitCount);
 
@@ -67,9 +65,7 @@ public class KochZhao
     }
   }
 
-
-  @Override
-  public byte[] readMessage(MatrixPixels from, byte[] key) {
+  public byte[] readMessage(PixelsMatrix from, byte[] key) {
     BitSet bits = new BitSet(from.getPrimaryMatrixCount());
     int bitIndex = 0;
     BitSet keyBits = BitSet.valueOf(key);

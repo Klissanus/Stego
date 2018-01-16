@@ -1,18 +1,17 @@
 package utils;
 
 import colorspace.ColorSpace;
-import colorspace.Rgb;
-import com.sun.istack.internal.NotNull;
-import transforms.Dct;
+import colorspace.Component;
+import colorspace.YCbCr;
 
-import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.*;
 
 /**
  * Created by Klissan on 02.12.2016.
+ * Разбивка изображения на блоки размера blocksize
  */
-public class MatrixPixels {
+public class PixelsMatrix {
   private int blockSize = 8;
   private int width;
   private int height;
@@ -24,23 +23,36 @@ public class MatrixPixels {
   private ArrayList<ColorSpace[][]> downOffset = new ArrayList<>();
   private ColorSpace[][] rightDownCorner;
 
-  public MatrixPixels(MatrixPixels mp) {
+  public PixelsMatrix(PixelsMatrix mp) {
     this.width = mp.width;
     this.height = mp.height;
     this.sizeX = mp.sizeX;
     this.sizeY = mp.sizeY;
     this.type = mp.type;
-    this.matrixs = new ArrayList<>(mp.matrixs);
-    this.rightOffset = new ArrayList<>(mp.rightOffset);
-    this.downOffset = new ArrayList<>(mp.downOffset);
-    this.rightDownCorner = mp.rightDownCorner;//todo new
-//    for (int i = 0; i < mp.rightDownCorner.length; i++) {
-//      for (int j = 0; j < mp.rightDownCorner[0].length; j++) {
-//        this.rightDownCorner[i][j] = mp.rightDownCorner[i][j].;
-//      }
-//    }
-  }
+    this.matrixs = new ArrayList<>();
+    //заполняем блоки blockSize х blockSize
 
+    this.rightOffset = mp.rightOffset;
+    this.downOffset = mp.downOffset;
+    this.rightDownCorner = mp.rightDownCorner;//todo new
+  }
+/* for (int j = 0; j < sizeY; j++) {
+      this.matrixs.add(new ArrayList<ColorSpace[][]>());
+      for (int i = 0; i < sizeX; i++) {
+        ColorSpace[][] matrix = new ColorSpace[blockSize][blockSize];
+        for (int n = 0; n < blockSize; n++) {
+          for (int m = 0; m < blockSize; m++) {
+            matrix[n][m] = new YCbCr(
+                mp.matrixs.get(i).get(j)[n][m].getComponent(Component.Y),
+                mp.matrixs.get(i).get(j)[n][m].getComponent(Component.CB),
+                mp.matrixs.get(i).get(j)[n][m].getComponent(Component.CR)
+            );//todo baad
+          }
+        }
+        this.matrixs.get(j).add(matrix);
+      }
+    }
+//  */
   public ArrayList<ArrayList<ColorSpace[][]>> getPrimaryMatrixs() {
     return matrixs;
   }
@@ -49,7 +61,7 @@ public class MatrixPixels {
     return sizeX * sizeY;
   }
 
-  public MatrixPixels(ColorSpace[] pixels, int width, int height) {
+  public PixelsMatrix(ColorSpace[] pixels, int width, int height) {
     this.type = pixels[0].getClass();
     this.width = width;
     this.height = height;
@@ -146,13 +158,13 @@ public class MatrixPixels {
 }
 /*
 
-  public HashMap<Color, MatrixPixels> changeBlocksColor(Rgb empty, Rgb correct, Rgb broken,
+  public HashMap<Color, PixelsMatrix> changeBlocksColor(Rgb empty, Rgb correct, Rgb broken,
                                 Set<Color> usedColors, @NotNull byte[] key, ArrayList<Integer> errpos) {
 
-    HashMap<Color, MatrixPixels> map = new HashMap<>();
-    map.put(Color.RED, new MatrixPixels(this));
-    map.put(Color.GREEN, new MatrixPixels(this));
-    map.put(Color.BLUE, new MatrixPixels(this));
+    HashMap<Color, PixelsMatrix> map = new HashMap<>();
+    map.put(Color.RED, new PixelsMatrix(this));
+    map.put(Color.GREEN, new PixelsMatrix(this));
+    map.put(Color.BLUE, new PixelsMatrix(this));
     map.forEach( (k,v) -> v.recolorEdgeBlocks());
 
     Map<Color, Set<Color>> colorToChange = new HashMap<>();

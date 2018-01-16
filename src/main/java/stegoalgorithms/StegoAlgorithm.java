@@ -1,18 +1,16 @@
 package stegoalgorithms;
 
-import utils.MatrixPixels;
+import colorspace.Component;
+import utils.PixelsMatrix;
 
-import java.util.BitSet;
+import java.util.Set;
 
 /**
- * Created by Klissan on 08.12.2016.
+ * Created by Klissan on 19.05.2017.
  */
 public interface StegoAlgorithm {
-  void hide(MatrixPixels where, byte[] msg, byte[] key);
 
-  byte[] readMessage(MatrixPixels from, byte[] key);
+    void hide(PixelsMatrix where, Set<Component> usedColors, byte[] msg, byte[] key);
 
-  default BitSet getBits(String string) {
-    return BitSet.valueOf(string.getBytes());
-  }
+    byte[] read(PixelsMatrix from, Set<Component> usedColors, byte[] key);
 }

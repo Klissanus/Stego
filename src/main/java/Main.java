@@ -1,104 +1,111 @@
-import colorspace.ColorSpace;
 import colorspace.Component;
 import colorspace.JavaByte;
 import colorspace.Rgb;
-import stegoalgorithms.KochZhao;
-import stegoalgorithms.StegoAlgorithm;
-import utils.MatrixPixels;
+import genetic.Genetic;
+import stegoalgorithms.CoeffModify.TwoCoeffModify;
+import stegoalgorithms.CoeffModify.twocoeffstrategy.TwoCoeffStrategyChangeOne;
+import stegoalgorithms.StegoAlgorithmImpl;
+import stegoalgorithms.blockcheck.NoneCheck;
+import utils.PixelsMatrix;
 import utils.Utils;
 
 import javax.imageio.ImageIO;
-import java.applet.Applet;
 import java.awt.image.BufferedImage;
-import java.awt.Graphics;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by Klissan on 22.11.2016.
- * todo hamming code
- * todo rid-solomon code
- * todo BMYY
- * todo YCbCr
+ * Created by Klissan on 27.06.2017.
  */
-public class Main extends Applet {
+public class Main {
 
-  BufferedImage img;
-  BufferedImage newImg;
-  byte[] stegoKey = new byte[]{(byte) 0xFF, (byte) 0x00, (byte) 0x00};
-  String filePath = "C:\\Users\\Klissan\\IdeaProjects\\Stego\\src\\main\\resources\\";
+    static int mode = 1;
 
-  @Override
-  public void init() {
-    super.init();
-    System.out.println(System.getProperty("user.dir"));
+    static BufferedImage img;
+    static BufferedImage newImg;
+    static byte[] stegoKey = new byte[]{(byte) 0xFF}; //, (byte) 0x00, (byte) 0x00
+    static String filePath = "C:\\Users\\Klissan\\IdeaProjects\\Stego\\src\\main\\resources\\";
+    static String message = "Make Stego Great Again"; //"V love Gr1Basiabcdefghijklmnopqrstuvwxyz";
+    static Set<Component> colorsSet = new HashSet<>();
+    static Genetic genetic = new Genetic(true);
+    static Rgb[] rgbBefore;
+    static int quality = 80;
+    static int P = 25;
+    static int iterations = 30;
+    static PixelsMatrix mtr = null;
 
-    String message = "V love Gr1Basi";
+    public static void main(String[] args) {
+        try {
+            colorsSet.add(Component.Y);
+            //открываем файл
+            img = ImageIO.read(new File(filePath + "images/Lenna.png"));
+            JavaByte[] pixels = Utils.readPixels(img);
+            rgbBefore = Utils.javaByteToRgb(pixels);
 
-    try {
-      Set<Component> colorsSet = new HashSet<>();
-      colorsSet.add(Component.BLUE);
-      //colorsSet.add(Component.GREEN);
-      //colorsSet.add(Component.RED);
+            calculateFitnesses(pixels);
+            for (int i = 0; i < iterations ; i++) {
+                System.out.println("=== ITERATION NUMBER " + i + " ===");
+                genetic.selection();
+                genetic.mutation();
+                genetic.crossover();
+                genetic.forceMutation();
+                calculateFitnesses(pixels);
+            }
 
-      //todo разобратьтся с альфа каналом png
-      img = ImageIO.read(new File(filePath + "images/Lenna.png"));
-      JavaByte[] pixels = Utils.readPixels(img);
-      /*Rgb[] rgbs = Utils.JavaByteToRgb(pixels);
-      JavaByte[] jbs = Utils.convertToJavaByte(rgbs);
+            int[] bestcoeffs = genetic.getBestCoeffs();
+            int[] coefs1 = Utils.zigZagToIndexes(bestcoeffs[0]);
+            int[] coefs2 = Utils.zigZagToIndexes(bestcoeffs[1]);
+            PixelsMatrix mtrMdf = new PixelsMatrix(Utils.javaByteToYCbCr(pixels), img.getWidth(), img.getHeight());
+            StegoAlgorithmImpl stegoAlg = new StegoAlgorithmImpl(new NoneCheck(),
+                new TwoCoeffModify(new TwoCoeffStrategyChangeOne(),
+                    P, coefs1[0], coefs1[1], coefs2[0], coefs2[1]));
+            stegoAlg.hide(mtrMdf, colorsSet, message.getBytes(), stegoKey);
 
-      for (int i = 0; i < jbs.length; i++) {
-        for(Component c : colorsSet) {
-          if (Math.round(pixels[i].getComponent(c)) != Math.round(jbs[i].getComponent(c))){
-            System.out.println("Wrong i = " + i);
-          }
+            JavaByte[] inMemory = Utils.convertToJavaByte(mtrMdf.toArray());
+            newImg = Utils.createNewImage(img, inMemory);
+            String format = "bmp";
+            File outputfile = new File(filePath + "result." + format);
+            ImageIO.write(newImg, format, outputfile);
+
+        }catch (IOException e){
         }
-      }*/
-
-      MatrixPixels mtr = new MatrixPixels(Utils.javaByteToRgb(pixels), img.getWidth(), img.getHeight());
-      System.out.println("Available bytes capacity = " + mtr.getPrimaryMatrixCount() / 8);
-
-      StegoAlgorithm stegoAlg = new KochZhao(400, 4, 5, 5, 4, colorsSet);
-
-      byte[] bytesBegin = stegoAlg.readMessage(mtr, stegoKey);
-      String strBegin = new String(bytesBegin);
-
-      //System.out.println("message byte size = " + message.getBytes().length);
-      stegoAlg.hide(mtr, message.getBytes(), stegoKey);
-
-      String format = "bmp";
-      JavaByte[] f = Utils.convertToJavaByte(mtr.toArray());
-      newImg = Utils.createNewImage(img, f);
-      File outputfile = new File(filePath + "saved." + format);
-      //Utils.compressImage(outputfile, newImg, 80);
-      ImageIO.write(newImg, format, outputfile);
-
-      System.out.println("\nTry to read message from empty container : \n" + strBegin.substring(0, message.length()));
-      String str1 = new String(stegoAlg.readMessage(mtr, stegoKey));
-      System.out.println("\nTry to read message from in memory img : \n" + str1.substring(0, message.length() +4));
-
-      BufferedImage img2 = ImageIO.read(new File(filePath + "saved." + format));
-      JavaByte[] pixels2 = Utils.readPixels(img2);
-      MatrixPixels mtr2 = new MatrixPixels(Utils.javaByteToRgb(pixels2), img.getWidth(), img.getHeight());
-      byte[] bytes2 = stegoAlg.readMessage(mtr2, stegoKey);
-      String str2 = new String(bytes2);
-      System.out.println("\nTry to read message from new img : \n" + str2.substring(0, message.length()));
-
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.out.println(e);
     }
-  }
 
-  @Override
-  public void start() {
-    super.start();
-  }
+    public static void calculateFitnesses(JavaByte[] pixels) throws IOException {
+        mtr = (mtr == null) ? new PixelsMatrix(Utils.javaByteToYCbCr(pixels), img.getWidth(), img.getHeight()) : mtr;
+        for (int i = 0; i < genetic.getSize(); i++) {
+            int[] chrom = genetic.get(i);
+            int[] coefs1 = Utils.zigZagToIndexes(chrom[0]);
+            int[] coefs2 = Utils.zigZagToIndexes(chrom[1]);
+            System.out.println("-- Chrom number " + i + " --");
+            System.out.println("Coef1 = " + coefs1[0] + ' ' + coefs1[1] + " zigzag= " + chrom[0]);
+            System.out.println("Coef2 = " + coefs2[0] + ' ' + coefs2[1] + " zigzag= " + chrom[1]);
 
-  @Override
-  public void paint(Graphics g) {
-    g.drawImage(newImg, 0, 0, null);
-  }
+            PixelsMatrix mtrMdf = new PixelsMatrix(Utils.javaByteToYCbCr(pixels), img.getWidth(), img.getHeight());
+            StegoAlgorithmImpl stegoAlg = new StegoAlgorithmImpl(new NoneCheck(),
+                new TwoCoeffModify(new TwoCoeffStrategyChangeOne(),
+                    P, coefs1[0], coefs1[1], coefs2[0], coefs2[1]));
+            stegoAlg.hide(mtrMdf, colorsSet, message.getBytes(), stegoKey);
+
+            JavaByte[] inMemory = Utils.convertToJavaByte(mtrMdf.toArray());
+            Rgb[] rgbAfter = Utils.javaByteToRgb(inMemory);
+
+            //сохраняем
+            String format = "jpg";
+            String pathName = filePath + i + "saved." + format;
+            newImg = Utils.createNewImage(img, inMemory);
+            File outputfile = new File(pathName);
+            Utils.compressImage(outputfile, newImg, quality);
+
+            //считываем из сохраненки
+            BufferedImage savedImg = ImageIO.read(new File(pathName));
+            JavaByte[] readPixels = Utils.readPixels(savedImg);
+            PixelsMatrix readMtr = new PixelsMatrix(Utils.javaByteToYCbCr(readPixels), img.getWidth(), img.getHeight());
+            byte[] readBytes = stegoAlg.read(readMtr, colorsSet, stegoKey);
+
+            genetic.fitnessFunction(rgbBefore, rgbAfter, message.getBytes(), readBytes, i);
+        }
+    }
 }

@@ -1,3 +1,4 @@
+/*
 import colorspace.ColorSpace;
 import colorspace.Component;
 import colorspace.JavaByte;
@@ -15,11 +16,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+*/
 /*
 *
  * Created by Klissan on 16.12.2016.
 
-*/
+*//*
+
 
 public class Tests {
 
@@ -33,7 +36,7 @@ public class Tests {
   String message = "H3ll0 W0r1d, this message wants to make stego great again";
   Set<Component> colorsSet = new HashSet<>();
 
-  private MatrixPixels initTest() {
+  private PixelsMatrix initTest() {
     //colorsSet.add(Component.BLUE);
     //colorsSet.add(Component.GREEN);
     //colorsSet.add(Component.RED);
@@ -43,12 +46,12 @@ public class Tests {
       stegoKey[i] = (byte) (Math.random() * 256 - 128);
     }
 
-    MatrixPixels mtr = null;
+    PixelsMatrix mtr = null;
     try {
       //open source file
       img = ImageIO.read(new File(filePath + fileName));
       JavaByte[] pixels = Utils.readPixels(img);
-      mtr = new MatrixPixels(Utils.javaByteToYCbCr(pixels), img.getWidth(), img.getHeight());
+      mtr = new PixelsMatrix(Utils.javaByteToYCbCr(pixels), img.getWidth(), img.getHeight());
 
 
     } catch (IOException e) {
@@ -56,9 +59,10 @@ public class Tests {
     }
     return mtr;
   }
+*/
 /*
 
-  void testAll(MatrixPixels sourceMtr) throws IOException {
+  void testAll(PixelsMatrix sourceMtr) throws IOException {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < i; j++) {
         int index1 = i;
@@ -79,8 +83,8 @@ public class Tests {
           int limitComp = 60;
           for (int comp = startComp; comp > limitComp - 1; comp -= stepComp) {
             System.out.println("\n----Compression = " + comp);
-            MatrixPixels mp = new MatrixPixels(sourceMtr);
-            StegoAlgorithm stegoAlg = new KochZhao(coeffP, index1, index2, index2, index1, colorsSet);
+            PixelsMatrix mp = new PixelsMatrix(sourceMtr);
+            StegoAlgorithmImpl stegoAlg = new KochZhao(coeffP, index1, index2, index2, index1, colorsSet);
 
             stegoAlg.hide(mp, message.getBytes(), stegoKey);
 
@@ -92,10 +96,10 @@ public class Tests {
             Utils.compressImage(outputfile, newImg, comp);
 
             newImg = ImageIO.read(new File(outputPath + filename + format));
-            MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
+            PixelsMatrix nmp = new PixelsMatrix(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
 
             compareImages(img, newImg);
-            ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.readMessage(nmp, stegoKey));
+            ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.read(nmp, stegoKey));
 
           }
         }
@@ -103,10 +107,12 @@ public class Tests {
     }
   }
 
-*/
+*//*
 
+
+*/
 /*
- void testStegoIndexQuality(MatrixPixels sourceMtr) throws IOException{
+ void testStegoIndexQuality(PixelsMatrix sourceMtr) throws IOException{
     System.out.println("message byte size = " + message.getBytes().length);
     int start = 40;
     double step = 10;
@@ -117,15 +123,17 @@ public class Tests {
         int index2 = j;
       }
   }
+*//*
+
+
+
+
 */
-
-
-
 /*
 
  @Test
   public void testStegoCompressionQuality() throws IOException{
-   MatrixPixels sourceMtr = initTest();
+   PixelsMatrix sourceMtr = initTest();
     System.out.println("message byte size = " + message.getBytes().length);
     int[] indexes = new int[]{0, 1, 2, 3, 4, 5, 6, 7};
     int index1 = 4;
@@ -136,8 +144,8 @@ public class Tests {
     double coeff = 100;
     for (int comp = start; comp > limit; comp -= step) {
       System.out.println("\n--Compression = " + comp);
-      MatrixPixels mp = new MatrixPixels(sourceMtr);
-      StegoAlgorithm stegoAlg = new KochZhao(coeff, index1, index2, index2, index1, colorsSet);
+      PixelsMatrix mp = new PixelsMatrix(sourceMtr);
+      StegoAlgorithmImpl stegoAlg = new KochZhao(coeff, index1, index2, index2, index1, colorsSet);
 
       stegoAlg.hide(mp, message.getBytes(), stegoKey);
 
@@ -150,17 +158,17 @@ public class Tests {
 
 
       newImg = ImageIO.read(new File(filePath + filename + format));
-      MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
+      PixelsMatrix nmp = new PixelsMatrix(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
 
       compareImages(img, newImg);
       System.out.println("blocks = " + nmp.getPrimaryMatrixCount());
-      ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.readMessage(nmp, stegoKey));
+      ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.read(nmp, stegoKey));
 
       Rgb empty = new Rgb((byte) 0, (byte) 0, (byte) 0);
       Rgb correct = new Rgb((byte) -128, (byte) -128, (byte) -128);
       Rgb error = new Rgb((byte) -1, (byte) -1, (byte) -1);
 
-      HashMap<Color, MatrixPixels> matrImgs = mp.changeBlocksColor(empty, correct, error, colorsSet, stegoKey, errs);
+      HashMap<Color, PixelsMatrix> matrImgs = mp.changeBlocksColor(empty, correct, error, colorsSet, stegoKey, errs);
       double fc = coeff;
       matrImgs.forEach((k,v) -> {
         try {
@@ -177,11 +185,12 @@ public class Tests {
 
     }
   }
-*/
+*//*
+
 
   @Test
   public void testStegoCoeffQuality() throws IOException{
-    MatrixPixels sourceMtr = initTest();
+    PixelsMatrix sourceMtr = initTest();
     System.out.println("message byte size = " + message.getBytes().length);
     int[] indexes = new int[]{0, 1, 2, 3, 4, 5, 6, 7};
     int index1 = 4;
@@ -191,8 +200,8 @@ public class Tests {
     double limit = 100;
     for (double coeff = start; coeff < limit + 1; coeff+= step) {
       System.out.println("\n--Coeff = " + coeff);
-      MatrixPixels mp = new MatrixPixels(sourceMtr);
-      StegoAlgorithm stegoAlg = new KochZhao(coeff, index1, index2, index2, index1, colorsSet);
+      PixelsMatrix mp = new PixelsMatrix(sourceMtr);
+      StegoAlgorithmImpl stegoAlg = new KochZhao(coeff, index1, index2, index2, index1, colorsSet);
 
       stegoAlg.hide(mp, message.getBytes(), stegoKey);
 
@@ -209,18 +218,19 @@ public class Tests {
       }
 
       newImg = ImageIO.read(new File(filePath + filename + format));
-      MatrixPixels nmp = new MatrixPixels(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
+      PixelsMatrix nmp = new PixelsMatrix(Utils.readPixels(newImg), newImg.getWidth(), newImg.getHeight());
 
       compareImages(img, newImg);
+*/
 /*
       System.out.println("blocks = " + nmp.getPrimaryMatrixCount());
-      ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.readMessage(nmp, stegoKey));
+      ArrayList<Integer> errs = compareMessages(message.getBytes(), stegoAlg.read(nmp, stegoKey));
 
       Rgb empty = new Rgb((byte) 0, (byte) 0, (byte) 0);
       Rgb correct = new Rgb((byte) -128, (byte) -128, (byte) -128);
       Rgb error = new Rgb((byte) -1, (byte) -1, (byte) -1);
 
-      HashMap<Color, MatrixPixels> matrImgs = mp.changeBlocksColor(empty, correct, error, colorsSet, stegoKey, errs);
+      HashMap<Color, PixelsMatrix> matrImgs = mp.changeBlocksColor(empty, correct, error, colorsSet, stegoKey, errs);
       double fc = coeff;
       matrImgs.forEach((k,v) -> {
         try {
@@ -234,7 +244,8 @@ public class Tests {
         }
       });
 
-*/
+*//*
+
 
 
     }
@@ -292,3 +303,4 @@ public class Tests {
     return result;
   }
 }
+*/

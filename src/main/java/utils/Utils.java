@@ -26,6 +26,68 @@ import java.util.Locale;
 public class Utils {
   static Map256 map256 = new Map256();
 
+  public static int[] zigZag(int[][] data){
+    int size1 = data.length;
+    int size2 = data[0].length;
+    int[] result = new int[size1 * size2];
+    int i = 1;
+    int j = 1;
+    for (int k = 0; k < size1 * size2; k++)
+    {
+      result[k] = data[i - 1][j - 1];
+      if ((i + j) % 2 == 0) { // Even stripes
+        if (j < size2) j++; else i+= 2;
+        if (i > 1) i--;
+      }
+      else {// Odd stripes
+        if (i < size1) i++; else j+= 2;
+        if (j > 1) j--;
+      }
+    }
+    return result;
+  }
+
+  public static int[] zigZagToIndexes(int zigZagIndex){
+    int i = 1;
+    int j = 1;
+    int SIZE = 8;
+    for (int k = 0; k < zigZagIndex; k++)
+    {
+      if ((i + j) % 2 == 0) { // Even stripes
+        if (j < SIZE) j++; else i+= 2;
+        if (i > 1) i--;
+      }
+      else {// Odd stripes
+        if (i < SIZE) i++; else j+= 2;
+        if (j > 1) j--;
+      }
+    }
+    int[] res = {i-1, j-1};
+    return res;
+  }
+
+  public static double[] zigZag(double[][] data){
+    int size1 = data.length;
+    int size2 = data[0].length;
+    double[] result = new double[size1 * size2];
+    int i = 1;
+    int j = 1;
+    for (int k = 0; k < size1 * size2; k++)
+    {
+      result[k] = data[i - 1][j - 1];
+      if ((i + j) % 2 == 0) { // Even stripes
+        if (j < size2) j++; else i+= 2;
+        if (i > 1) i--;
+      }
+      else {// Odd stripes
+        if (i < size1) i++; else j+= 2;
+        if (j > 1) j--;
+      }
+    }
+    return result;
+  }
+
+
   public static JavaByte[] readPixels(BufferedImage img) {
     int w = img.getWidth();
     int h = img.getHeight();

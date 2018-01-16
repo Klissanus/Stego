@@ -7,13 +7,15 @@ import colorspace.bytemapping.Map256;
 
 /**
  * Created by Klissan on 02.12.2016.
+ * Блок ДКП
  */
 public class Dct {
+  private static int SIZE = 8;
   private double[][] dctMatrix;
 
   static {
-    e = new double[8][8];
-    cos_t = new double[8][8];
+    e = new double[SIZE][SIZE];
+    cos_t = new double[SIZE][SIZE];
     calculateCoefficients();
     calculateCosins();
   }
@@ -38,6 +40,27 @@ public class Dct {
     return dctMatrix;
   }
 
+  public double getDc(){
+    return dctMatrix[0][0];
+  }
+
+  public double get(int zigZagIndex){
+    int i = 1;
+    int j = 1;
+    for (int k = 0; k < zigZagIndex; k++)
+    {
+      if ((i + j) % 2 == 0) { // Even stripes
+        if (j < SIZE) j++; else i+= 2;
+        if (i > 1) i--;
+      }
+      else {// Odd stripes
+        if (i < SIZE) i++; else j+= 2;
+        if (j > 1) j--;
+      }
+    }
+    return dctMatrix[i][j];
+  }
+
 
   public double[][] idct() {
     double min = Double.MAX_VALUE;
@@ -59,6 +82,29 @@ public class Dct {
     }
     return idctCoeffs;
     //return normalisation(idctCoeffs, min, max);
+  }
+
+  public double getLFSummary(){
+    double result = 0.0;
+    for (int j = 0; j < 7; j++) {
+      result += this.dctMatrix[0][j];
+    }
+    for (int i = 1; i < 7; i++) {
+      for (int j = 0; j < 7 - i ; j++) {
+        result += this.dctMatrix[i][j];
+      }
+    }
+    return result;
+  }
+
+  public double getHFSummary(){
+    double result = 0.0;
+    for (int i = 2; i < 8; i++) {
+      for (int j = 7; j > 7 - i + 1 ; j--) {
+        result += this.dctMatrix[i][j];
+      }
+    }
+    return result;
   }
 /*
   private byte[][] normalisation(double[][] idctCoeffs, double min, double max) {
@@ -110,6 +156,7 @@ public class Dct {
       }
     }
   }
+
 
   private static double[][] cos_t;
 
